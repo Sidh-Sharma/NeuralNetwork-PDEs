@@ -1,8 +1,8 @@
-# * Theoretical Plan
+# Theoretical Plan
 
 ---
 
-# 📚 Detailed Plan: Neural Solution of 3D OU Fokker–Planck Equation with Basis Learning
+#  Neural Solution of 3D OU Fokker–Planck Equation with Basis Learning
 
 ---
 
@@ -176,7 +176,7 @@ $$
 \mathcal{L}_{\text{total}} = \lambda_1 \mathcal{L}_{\text{PDE}} + \lambda_2 \mathcal{L}_{\text{mass}} + \lambda_3 \mathcal{L}_{\text{boundary}}
 $$
 
-with \(\lambda_i\) hyperparameters (start with all 1).
+with \(\lambda_i\) as hyperparameters (for now start with all 1).
 
 ---
 
@@ -233,7 +233,7 @@ For a few \(t\):
 
 ---
 
-# 📌 Exact Implementation Steps
+# Exact Implementation Steps
 
 ---
 
@@ -272,16 +272,5 @@ For a few \(t\):
 
 ---
 
-# 🎯 Summary Table
 
-| Item              | Choice                                  |
-| ----------------- | --------------------------------------- |
-| Activation        | tanh everywhere                         |
-| Initializers      | Xavier normal                           |
-| LR Schedule       | ReduceLROnPlateau                       |
-| Losses            | PDE + mass conservation (+ optional BC) |
-| Training Strategy | Multi-phase (basis, growth, fine-tune)  |
-| Visualizations    | Side-by-side, contour plots             |
-
----
 
