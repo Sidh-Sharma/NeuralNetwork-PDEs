@@ -10,9 +10,9 @@ from pathlib import Path
 from datetime import datetime
 
 # Local imports
-from src.models.low_rank_model import LowRankModel
-from src.physics.ou_process import create_default_ou_params
-from src.training.trainer import FPTrainer
+from models.low_rank_model import LowRankModel
+from physics.ou_process import create_default_ou_params
+from training.trainer import FPTrainer
 
 def configure_logging(save_dir: Path) -> logging.Logger:
     """Setup unified logging system"""

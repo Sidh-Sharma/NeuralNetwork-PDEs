@@ -5,8 +5,8 @@ Low-rank decomposition model combining spatial and temporal networks.
 import torch
 import torch.nn as nn
 from typing import Tuple
-from basis_network import MultiModeBasisNetwork
-from temporal_network import TemporalNetwork
+from .basis_network import MultiModeBasisNetwork
+from .temporal_network import TemporalNetwork
 
 class LowRankModel(nn.Module):
     """
