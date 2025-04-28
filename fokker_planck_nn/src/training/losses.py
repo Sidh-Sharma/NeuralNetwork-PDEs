@@ -135,29 +135,3 @@ class CompositeLoss:
             "bc": L_bc
         }
 
-
-if __name__ == "__main__":
-    # Test loss components with analytical solution
-    from physics.ou_process import ou_analytical_solution, create_default_ou_params
-    
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    mu0, sigma0, A, D = create_default_ou_params(device)
-    
-    # Wrap analytical solution as model
-    def analytical_model(x, t):
-        return ou_analytical_solution(x, t, mu0, sigma0, A, D)
-    
-    # Initialize loss component
-    loss_fn = CompositeLoss(A, D, device=device)
-    
-    # Generate test batch
-    x_test = torch.randn(1000, 3, device=device)
-    t_test = torch.tensor([0.5], device=device).expand(1000)
-    
-    # Compute losses (should be near zero for exact solution)
-    total_loss, loss_dict = loss_fn(analytical_model, x_test, t_test)
-    
-    print("Loss components for analytical solution:")
-    print(f"- PDE Residual: {loss_dict['pde'].item():.2e}")
-    print(f"- Mass Conservation: {loss_dict['mass'].item():.2e}") 
-    print(f"- Boundary Condition: {loss_dict['bc'].item():.2e}")

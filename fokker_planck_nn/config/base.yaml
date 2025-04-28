@@ -1,0 +1,36 @@
+# Model architecture parameters
+model:
+  num_modes: 4            # Number of basis functions (R)
+  spatial_hidden: 64       # Hidden units in spatial networks
+  temporal_hidden: 64      # Hidden units in temporal network
+  activation: "gelu"       # Activation function
+  orthogonal_init: True    # Initialize with orthogonal modes
+
+# Training parameters
+training:
+  batch_size: 512         # Batch size
+  max_epochs: 100         # Total training epochs
+  val_interval: 10         # Validate every N epochs
+  lr: 3e-4                 # Learning rate
+  min_lr: 1e-6             # Minimum learning rate
+  weight_decay: 1e-6       # L2 regularization
+  grad_clip: 1.0           # Gradient clipping threshold
+  restart_cycle: 500       # LR scheduler restarts
+  phase_epochs:            # Phase duration in epochs
+    initial: 20
+    mid: 50
+    final: 30
+  save_dir: "checkpoints"  # Model checkpoint directory
+
+# Validation parameters
+validation:
+  grid_resolution: 50      # Match training data
+  time_points: 20          # Number of temporal snapshots
+  bounds: [-5.0, 5.0]      # Spatial domain
+
+# System parameters
+system:
+  device: "cuda"           # auto/cuda/mps/cpu
+  precision: "fp32"        # fp32/fp16
+  log_dir: "logs"          # Training logs directory
+  

@@ -11,15 +11,15 @@ from pathlib import Path
 from typing import Dict
 
 # Local imports
-from src.models.low_rank_model import LowRankModel
-from src.data.analytical_data import load_analytical_data
-from src.utils.metrics import (
+from models.low_rank_model import LowRankModel
+from data.analytical_data import load_analytical_data
+from utils.metrics import (
     relative_l2_error,
     gaussian_kl_divergence,
     max_pointwise_error,
     moments_from_samples
 )
-from src.utils.visualization import plot_error_comparison, create_animation
+from utils.visualization import plot_error_comparison, create_animation
 
 def configure_logging(output_dir: Path) -> logging.Logger:
     """Set up logging system"""
@@ -41,23 +41,34 @@ def configure_logging(output_dir: Path) -> logging.Logger:
     return logger
 
 def load_model(checkpoint_path: str, device: torch.device) -> LowRankModel:
-    """Load trained model with architecture parameters from checkpoint"""
+    """Load model from checkpoint with proper key structure"""
     try:
-        checkpoint = torch.load(checkpoint_path, map_location=device)
+        checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
         
-        # Reconstruct model with saved parameters
+        # Get model parameters from config
+        model_config = checkpoint['config'].get('model', {})
+        num_modes = model_config.get('num_modes', 4)
+        spatial_hidden = model_config.get('spatial_hidden', 64)
+        temporal_hidden = model_config.get('temporal_hidden', 64)
+        
+        # Initialize model
         model = LowRankModel(
-            num_modes=checkpoint['config']['model']['num_modes'],
-            spatial_hidden=checkpoint['config']['model']['spatial_hidden'],
-            temporal_hidden=checkpoint['config']['model']['temporal_hidden']
+            num_modes=num_modes,
+            spatial_hidden=spatial_hidden,
+            temporal_hidden=temporal_hidden
         ).to(device)
         
+        # Load state dict
         model.load_state_dict(checkpoint['model'])
         return model
-    except FileNotFoundError:
-        raise RuntimeError(f"Checkpoint file not found: {checkpoint_path}")
+        
     except KeyError as e:
-        raise RuntimeError(f"Missing key in checkpoint: {str(e)}")
+        available_keys = list(checkpoint.keys())
+        raise RuntimeError(
+            f"Checkpoint missing required key: {e}\n"
+            f"Available keys: {available_keys}\n"
+            f"Config contents: {checkpoint.get('config', 'No config found')}"
+        )
     except Exception as e:
         raise RuntimeError(f"Error loading model: {str(e)}")
 

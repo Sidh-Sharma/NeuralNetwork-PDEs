@@ -78,10 +78,10 @@ def main():
     ).to(device)
     
     # Load physics parameters
-    ou_params = create_default_ou_params(device)
+    _,_, A, D = create_default_ou_params(device)
     
     # Initialize trainer
-    trainer = FPTrainer(model, *ou_params, config=config['training'])
+    trainer = FPTrainer(model, A, D, config=config['training'])
     
     # Resume training if specified
     if args.resume:

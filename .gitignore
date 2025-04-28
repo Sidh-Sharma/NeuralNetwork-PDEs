@@ -21,13 +21,12 @@ wheels/
 *.egg
 
 # PyTorch/ML specific
-*.pt  # Model checkpoints (except pre-trained)
-*.pth
+*.pt 
 *.onnx
 *.tensorrt
 
 # Project artifacts
-/checkpoints/  # Training checkpoints
+/checkpoints/*.pt  # Training checkpoints
 /results/      # Evaluation outputs
 /evaluation/   # Evaluation results
 /data/*.pt     # Generated datasets (except raw)
@@ -41,7 +40,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-fp-env/  # Your virtual env name
 
 # IDE
 .vscode/

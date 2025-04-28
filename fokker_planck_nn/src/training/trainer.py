@@ -144,13 +144,20 @@ class FPTrainer:
 
         with torch.no_grad():
             for t_idx, t in enumerate(val_data["times"]):
+                # Forward pass
                 p_pred = self.model(val_data["grid"], t.expand(val_data["grid"].shape[0]))
                 p_true = val_data["solutions"][t_idx]
                 
+                # Get predicted moments
+                mean_pred, cov_pred = self._model_moments(p_pred, val_data["grid"])
+                
+                # Get true moments - correctly access the tuple elements
+                mean_true = val_data["moments"][0][t_idx]  # First element is means tensor
+                cov_true = val_data["moments"][1][t_idx]   # Second element is covariances tensor
+                
                 # Compute metrics
                 metrics["l2"].append(relative_l2_error(p_pred, p_true))
-                metrics["kl"].append(gaussian_kl_divergence(*self._model_moments(p_pred, val_data["grid"]),
-                                                           *val_data["moments"][t_idx]))
+                metrics["kl"].append(gaussian_kl_divergence(mean_pred, cov_pred, mean_true, cov_true))
                 metrics["max_err"].append(max_pointwise_error(p_pred, p_true))
 
         return {k: np.mean(v) for k, v in metrics.items()}
@@ -226,13 +233,76 @@ class FPTrainer:
 
     def _load_validation_data(self) -> Dict:
         """Load or generate validation dataset."""
-        # Implementation depends on data module
-        pass
+        if not hasattr(self, '_val_data_cache'):
+            # Import analytical data utilities
+            from data.analytical_data import load_analytical_data, create_validation_dataset, generate_grid_points
+            
+            # Look for saved validation data first - note the correct path
+            validation_file = Path("data/validation.pt")
+            
+            if validation_file.exists():
+                logger.info(f"Loading validation data from {validation_file}")
+                self._val_data_cache = load_analytical_data(validation_file, self.device)
+            else:
+                logger.warning("Validation data not found at data/validation.pt - generating on-the-fly")
+                # Generate grid based on config
+                grid = generate_grid_points(
+                    bounds=(-5.0, 5.0),
+                    resolution=self.config.get("grid_resolution", 50),
+                    device=self.device
+                )
+                
+                # Create validation dataset
+                self._val_data_cache = create_validation_dataset(
+                    grid=grid,
+                    time_points=self.config.get("time_points", 20),
+                    t_max=2.0,
+                    device=self.device
+                )
+                
+                # Save for future use
+                logger.info("Saving generated validation data for future use")
+                Path("data").mkdir(exist_ok=True)
+                torch.save(self._val_data_cache, validation_file)
+        
+        return self._val_data_cache
 
     def _model_moments(self, p: torch.Tensor, grid: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Compute model moments from predicted distribution."""
-        # Implementation depends on metrics module
-        pass
+        # Normalize probability density
+        p_sum = torch.sum(p)
+        if p_sum > 0:  # Avoid division by zero
+            p_norm = p / p_sum
+        else:
+            logger.warning("Zero probability sum encountered in _model_moments")
+            p_norm = torch.ones_like(p) / p.shape[0]
+        
+        # Compute mean
+        mean = torch.sum(grid * p_norm.unsqueeze(1), dim=0)
+        
+        # Compute covariance
+        centered = grid - mean
+        cov = torch.zeros((3, 3), device=self.device)
+        
+        for i in range(grid.shape[0]):
+            # Outer product for each point, weighted by probability
+            outer = centered[i].unsqueeze(1) @ centered[i].unsqueeze(0)
+            cov += p_norm[i] * outer
+        
+        return mean, cov
+
+    def _update_metrics(self, metrics: Dict) -> None:
+        """Update and track validation metrics history."""
+        # Store the full metrics in history
+        self.metric_history.append(metrics)
+        
+        # Update specific metrics for plotting
+        self.val_history.append(metrics["l2"])  # Track L2 error for plotting
+        
+        # Log the validation results
+        logger.info(f"Epoch {self.epoch} validation metrics: " +
+                    f"L2={metrics['l2']:.6f}, KL={metrics['kl']:.6f}, " +
+                    f"MaxErr={metrics['max_err']:.6f}")
 
 if __name__ == "__main__":
     # Example usage

@@ -1,0 +1,18 @@
+# For quick debugging on laptop
+model:
+  num_modes: 2
+  spatial_hidden: 32
+  temporal_hidden: 32
+
+training:
+  batch_size: 512
+  max_epochs: 100
+  val_interval: 10
+
+validation:
+  grid_resolution: 30
+  time_points: 5
+
+system:
+  device: "mps"
+  precision: "fp32"
